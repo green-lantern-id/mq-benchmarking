@@ -2,6 +2,7 @@ mq-benchmarking
 ==========================
 
 ### Environment Variables
+- TEST_NAME: "nsq"(default)|"zmq" (this version support only "nsq")
 - CLIENT_MODE:    "consumer"(default), "producer"
 - MQ_CONNECTION_STRING: connection string to message queue endpoint
 - MESSAGE_COUNT: number of message for perform testing
