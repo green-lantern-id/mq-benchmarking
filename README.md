@@ -1,17 +1,28 @@
 mq-benchmarking
 ==========================
 
-**Deprecated:** Use [Flotilla](https://github.com/tylertreat/Flotilla) for running benchmarks. See related [blog post](http://www.bravenewgeek.com/benchmark-responsibly/) for more information.
+### Environment Variables
+- CLIENT_MODE:    "consumer"(default), "producer"
+- MQ_CONNECTION_STRING: connection string to message queue endpoint
+- MESSAGE_COUNT: number of message for perform testing
+- MESSAGE_SIZE: size of message (byte)
+- LATENCY_TEST: "true", "false"(default) -- string of boolean
 
-Results: http://www.bravenewgeek.com/dissecting-message-queues/
-___
+### TODO
+- add ZMQ
+- Configuration topic name (probably use topic name for each test case)
 
-**Usage:** `go run main.go subject [test_latency] [num_messages] [message_size]`
 
-**subject:** inproc, zeromq, nanomsg, kestrel, kafka, rabbitmq, nsq, redis, activemq, nats, beanstalkd, iris
+### Docker build
 
-**test_latency:** `true` will test latency, `false` will test throughput
+`git clone https://github.com/green-lantern-id/mq-benchmarking`
+`docker build -t green-lantern/mq-benchmarking:0.1 .`
 
-**num_messages:** number of messages to send in the test
+#### Run Message Broker 
+TO BE UPDATE
 
-**message_size:** size of each message in bytes
+#### Run Consumer
+`docker run -it --rm -e CLIENT_MODE='consumer' -e MQ_CONNECTION_STRING='somewhere:someport' green-lantern/mq-benchmarking:0.1`
+
+#### Run Producer
+`docker run -it --rm -e CLIENT_MODE='producer' -e MQ_CONNECTION_STRING='somewhere:someport' green-lantern/mq-benchmarking:0.1`
