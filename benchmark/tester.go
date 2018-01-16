@@ -14,16 +14,34 @@ type Tester struct {
 
 func (tester Tester) Test() {
 	log.Printf("Begin %s test", tester.Name)
-	tester.Setup()
+	if tester.Mode == "consumer"{
+		tester.Setup()
+	}
 	defer tester.Teardown()
 
+	tester.testAll()
+
+	/*
 	if tester.TestLatency {
 		tester.testLatency()
 	} else {
 		tester.testThroughput()
 	}
+	*/
 
 	log.Printf("End %s test", tester.Name)
+}
+
+func (tester Tester) testAll(){
+	if tester.Mode == "consumer" {
+		log.Printf("[Consumer] Running test throughput in consumer mode")
+		receiver := NewReceiveEndpoint(tester, tester.MessageCount)
+		receiver.WaitForCompletion()
+	} else {
+		log.Printf("[Producer] Running test throughput in producer mode")
+		sender := &SendEndpoint{MessageSender: tester}
+		sender.TestAll(tester.MessageSize, tester.MessageCount)
+	}
 }
 
 func (tester Tester) testThroughput() {

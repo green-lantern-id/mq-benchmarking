@@ -14,6 +14,23 @@ type SendEndpoint struct {
 	MessageSender MessageSender
 }
 
+
+// Merge TestLatency and TestThroughput in one single test
+func (endpoint SendEndpoint) TestAll(messageSize int, numberToSend int){
+	message := make([]byte, messageSize)
+	start := time.Now().UnixNano()
+
+	for i := 0; i < numberToSend; i++ {
+		binary.PutVarint(message, time.Now().UnixNano())
+		endpoint.MessageSender.Send(message)
+	}
+
+	stop := time.Now().UnixNano()
+	ms := float32(stop-start)/ 1000000
+	log.Printf("Send %d messages in %f ms\n", numberToSend, ms)
+}
+
+
 func (endpoint SendEndpoint) TestThroughput(messageSize int, numberToSend int) {
 	message := make([]byte, messageSize)
 	start := time.Now().UnixNano()

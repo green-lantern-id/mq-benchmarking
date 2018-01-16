@@ -17,7 +17,7 @@ type Nsq struct {
 }
 
 func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
-	topic := "test"
+	topic := getEnv("TOPIC_NAME", "default")
 	channel := "test"
 	conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
 	log.Printf("[NSQClient] Connect to %s", conn)
@@ -25,6 +25,12 @@ func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
 	sub, _ := nsq.NewConsumer(topic, channel, nsq.NewConfig())
 
 	var handler benchmark.MessageHandler
+
+	handler = &benchmark.AllInOneMessageHandler{
+		NumberOfMessages: numberOfMessages,
+		Latencies: []float32{},
+	}
+	/*
 	if testLatency {
 		handler = &benchmark.LatencyMessageHandler{
 			NumberOfMessages: numberOfMessages,
@@ -33,6 +39,7 @@ func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
 	} else {
 		handler = &benchmark.ThroughputMessageHandler{NumberOfMessages: numberOfMessages}
 	}
+	*/
 
 	return &Nsq{
 		handler: handler,
@@ -59,7 +66,8 @@ func (n *Nsq) Teardown() {
 }
 
 func (n *Nsq) Send(message []byte) {
-	n.pub.PublishAsync(n.topic, message, nil)
+	//n.pub.PublishAsync(n.topic, message, nil)
+	n.pub.Publish(n.topic, message)
 }
 
 func (n *Nsq) MessageHandler() *benchmark.MessageHandler {
