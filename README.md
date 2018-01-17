@@ -1,13 +1,15 @@
 mq-benchmarking
 ==========================
 
+### Changelog
+- Remove environment variable `LATENCY_TEST`. All test case will produce both latency and throughput results
+
 ### Environment Variables
 - TEST_NAME: "nsq"(default)|"zmq" (this version support only "nsq")
 - CLIENT_MODE:    "consumer"(default), "producer"
 - MQ_CONNECTION_STRING: connection string to message queue endpoint
 - MESSAGE_COUNT: number of message for perform testing
 - MESSAGE_SIZE: size of message (byte)
-- LATENCY_TEST: "true", "false"(default) -- string of boolean
 
 ### TODO
 - add ZMQ
