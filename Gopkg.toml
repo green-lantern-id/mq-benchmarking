@@ -24,3 +24,7 @@
 [[constraint]]
   name = "github.com/bitly/go-nsq"
   version = "1.0.7"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/pebbe/zmq4"

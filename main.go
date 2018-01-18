@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -19,6 +18,10 @@ func newTester(subject string, testLatency bool, msgCount, msgSize int, mode str
 		nsq := mq.NewNsq(msgCount, testLatency)
 		messageSender = nsq
 		messageReceiver = nsq
+	case "zeromq":
+		zeromq := mq.NewZeromq(msgCount, testLatency)
+		messageSender = zeromq
+		messageReceiver = zeromq
 	default:
 		return nil
 	}
@@ -43,7 +46,7 @@ func getEnv(key, defaultValue string) string {
 }
 
 func parseEnv() (string, bool, int, int, string) {
-	test := getEnv("TEST_NAME", "nsq")
+	test := getEnv("TEST", "nsq")
 	messageCount, err := strconv.Atoi(getEnv("MESSAGE_COUNT", "10000"))
 	messageSize, err := strconv.Atoi(getEnv("MESSAGE_SIZE", "1024"))
 	mode := getEnv("CLIENT_MODE", "consumer") // consumer vs producer
@@ -56,61 +59,10 @@ func parseEnv() (string, bool, int, int, string) {
 	return test, testLatency, messageCount, messageSize, mode
 }
 
-func parseArgs(usage string) (string, bool, int, int) {
-
-	if len(os.Args) < 2 {
-		log.Print(usage)
-		os.Exit(1)
-	}
-
-	test := os.Args[1]
-	messageCount := 1000000
-	messageSize := 1000
-	testLatency := false
-
-	if len(os.Args) > 2 {
-		latency, err := strconv.ParseBool(os.Args[2])
-		if err != nil {
-			log.Print(usage)
-			os.Exit(1)
-		}
-		testLatency = latency
-	}
-
-	if len(os.Args) > 3 {
-		count, err := strconv.Atoi(os.Args[3])
-		if err != nil {
-			log.Print(usage)
-			os.Exit(1)
-		}
-		messageCount = count
-	}
-
-	if len(os.Args) > 4 {
-		size, err := strconv.Atoi(os.Args[4])
-		if err != nil {
-			log.Print(usage)
-			os.Exit(1)
-		}
-		messageSize = size
-	}
-
-	return test, testLatency, messageCount, messageSize
-}
-
 func main() {
-	usage := fmt.Sprintf(
-		"usage: %s "+
-			"{"+
-			"zeromq|"+
-			"nsq|"+
-			"} "+
-			"[test_latency] [num_messages] [message_size]",
-		os.Args[0])
 
 	tester := newTester(parseEnv())
 	if tester == nil {
-		log.Println(usage)
 		os.Exit(1)
 	}
 
