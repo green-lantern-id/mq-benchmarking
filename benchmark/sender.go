@@ -57,3 +57,39 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 	log.Printf("Sent %d messages in %f ms\n", numberToSend, ms)
 	log.Printf("Sent %f per second\n", 1000*float32(numberToSend)/ms)
 }
+
+//========================== Poisson ==============================================
+
+var testDurationInSecond int64;
+
+func sendFunction(messageSize int) {
+  message := make([]byte, messageSize);
+  binary.PutVarint(message, time.Now().UnixNano())
+  endpoint.MessageSender.Send(message);
+}
+
+func stopCondition(start int64, result PoissonResult) bool {
+  now := time.Now().UnixNano();
+  diffInSecond := (now - start) / 1000000000;
+  return diffInSecond >= testDurationInSecond
+  //or limit message count
+}
+
+//====== call =========
+
+func (endpoint SendEndpoint) Poisson(avgMessageSizeInKB float64,
+  avgDelayBetweenMessageInMicrosecond float64,
+  _testDurationInSecond int64) {
+ 
+  testDurationInSecond = _testDurationInSecond;
+ 
+  result := poissonBenchmark(avgMessageSizeInKB,
+    avgDelayBetweenMessageInMicrosecond, 
+    sendFunction,
+    stopCondition );
+
+  fmt.Printf("Sent %d messages with sum size %d KB time used %f ms\n",result.messageCount,
+    result.sumDataSize,
+    float64(result.timeUsed)/float64(1000000));
+
+}
