@@ -13,9 +13,15 @@
   packages = ["."]
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
+[[projects]]
+  branch = "master"
+  name = "github.com/pebbe/zmq4"
+  packages = ["."]
+  revision = "230ecd8dddd0f31ec76da33d8ff4277887ca773e"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0f7b2feb649b9173b1c8e40e5afe17dbe24fcceb84219928621c9cc025c52bb3"
+  inputs-digest = "f2fdc35d8d385651edfd44b6d50c356de020429ede1523dfbabc08156b1d49ef"
   solver-name = "gps-cdcl"
   solver-version = 1
