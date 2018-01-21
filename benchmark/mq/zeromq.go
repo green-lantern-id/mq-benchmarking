@@ -24,22 +24,21 @@ func zeromqReceive(zeromq *Zeromq) {
 	}
 }
 
-func NewZeromq(numberOfMessages int, testLatency bool) *Zeromq {
+func NewZeromq(numberOfMessages int, clientMode string) *Zeromq {
 	ctx, _ := zmq4.NewContext()
 	pub, _ := ctx.NewSocket(zmq4.PUB)
-	pub.Bind("tcp://*:5555")
 	sub, _ := ctx.NewSocket(zmq4.SUB)
-	sub.SetSubscribe("")
-	sub.Connect("tcp://localhost:5555")
+	if clientMode == "consumer" {
+		sub.Connect(getEnv("MQ_CONNECTION_STRING", "tcp://localhost:5555"))
+	} else {
+		pub.Bind(getEnv("MQ_CONNECTION_STRING", "tcp://*5555"))
+	}
 
 	var handler benchmark.MessageHandler
-	if testLatency {
-		handler = &benchmark.LatencyMessageHandler{
-			NumberOfMessages: numberOfMessages,
-			Latencies:        []float32{},
-		}
-	} else {
-		handler = &benchmark.ThroughputMessageHandler{NumberOfMessages: numberOfMessages}
+
+	handler = &benchmark.AllInOneMessageHandler{
+		NumberOfMessages: numberOfMessages,
+		Latencies: []float32{},
 	}
 
 	return &Zeromq{

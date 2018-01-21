@@ -1,6 +1,12 @@
 package benchmark
 
-import "log"
+import (
+	"log"
+	"strconv"
+	"os"
+	"github.com/green-lantern-id/mq-benchmarking/benchmark/clock"
+	"github.com/green-lantern-id/mq-benchmarking/benchmark/generator"
+)
 
 type Tester struct {
 	Name         string
@@ -19,15 +25,40 @@ func (tester Tester) Test() {
 	}
 	defer tester.Teardown()
 
-	tester.testAll()
+	if tester.Mode == "producer"{
+		log.Printf("Running producer mode")
+		sender := &SendEndpoint{MessageSender: tester}
+		log.Printf("Start uniform clock rate")
 
-	/*
-	if tester.TestLatency {
-		tester.testLatency()
+		msgSizeGenerator := getEnv("MSG_SIZE_GENERATOR", "uniform")	// uniform|poisson
+		msgRateGenerator := getEnv("MSG_RATE_GENERATOR", "uniform")	// uniform|poisson
+
+		var msgGenerator generator.MessageGenerator
+
+		if msgSizeGenerator == "uniform" {
+			msgSize, _ := strconv.Atoi(getEnv("MSG_UNIFORM_SIZE", "1024"))
+			msgGenerator = generator.NewUniformGenerator(msgSize)
+		}
+
+
+	//	var msgSizeChan chan int
+	//	var end chan bool
+		if msgRateGenerator == "uniform" {
+			uniformRate, _ := strconv.ParseFloat(getEnv("MSG_UNIFORM_TPS_RATE", "1000"), 64)
+			msgSizeChan, end := clock.UniformRate(msgGenerator, uniformRate, tester.MessageCount)
+			sender.Start(msgSizeChan, end)
+		} else {	// poisson
+			poissonAvgRate, _ := strconv.ParseFloat(getEnv("MSG_POISSON_AVG_DELAY", "500"), 64)
+			msgSizeChan, end := clock.PoissonRate(msgGenerator, poissonAvgRate, tester.MessageCount)
+			sender.Start(msgSizeChan, end)
+		}
+
+		//sender.Start(msgSizeChan, end)
 	} else {
-		tester.testThroughput()
+		log.Printf("Running consumer mode")
+		receiver := NewReceiveEndpoint(tester, tester.MessageCount)
+		receiver.WaitForCompletion()
 	}
-	*/
 
 	log.Printf("End %s test", tester.Name)
 }
@@ -66,4 +97,12 @@ func (tester Tester) testLatency() {
 		sender := &SendEndpoint{MessageSender: tester}
 		sender.TestLatency(tester.MessageSize, tester.MessageCount)
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		value = defaultValue
+	}
+	return value
 }

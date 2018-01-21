@@ -14,6 +14,24 @@ type SendEndpoint struct {
 	MessageSender MessageSender
 }
 
+func (endpoint SendEndpoint) Start(msgSize<-chan int, doneSignal<-chan bool){
+	done := false
+	log.Printf("Start sender")
+	for done != true {
+		select {
+			case mSize:= <-msgSize:
+				log.Printf("Got clock")
+				message := make([]byte, mSize)
+				binary.PutVarint(message, time.Now().UnixNano())
+				endpoint.MessageSender.Send(message)
+			case signal:= <-doneSignal:
+				done = signal
+		}
+	}
+
+	log.Printf("its done")
+}
+
 
 // Merge TestLatency and TestThroughput in one single test
 func (endpoint SendEndpoint) TestAll(messageSize int, numberToSend int){
@@ -50,6 +68,7 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 	for i := 0; i < numberToSend; i++ {
 		binary.PutVarint(b, time.Now().UnixNano())
 		endpoint.MessageSender.Send(b)
+		log.Printf("Message Sent")
 	}
 
 	stop := time.Now().UnixNano()
@@ -62,7 +81,7 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 /*
 var testDurationInSecond int64;
 
-func (endpoint SendEndpoint) sendFunction(messageSize int) {
+func sendFunction(messageSize int) {
   message := make([]byte, messageSize);
   binary.PutVarint(message, time.Now().UnixNano())
   endpoint.MessageSender.Send(message);

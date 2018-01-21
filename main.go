@@ -15,11 +15,11 @@ func newTester(subject string, testLatency bool, msgCount, msgSize int, mode str
 
 	switch subject {
 	case "nsq":
-		nsq := mq.NewNsq(msgCount, testLatency)
+		nsq := mq.NewNsq(msgCount, mode)
 		messageSender = nsq
 		messageReceiver = nsq
 	case "zeromq":
-		zeromq := mq.NewZeromq(msgCount, testLatency)
+		zeromq := mq.NewZeromq(msgCount, mode)
 		messageSender = zeromq
 		messageReceiver = zeromq
 	default:

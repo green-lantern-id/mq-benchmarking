@@ -14,15 +14,18 @@ type Nsq struct {
 	sub     *nsq.Consumer
 	topic   string
 	channel string
+	mode string
 }
 
-func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
+func NewNsq(numberOfMessages int, clientMode string) *Nsq {
 	topic := getEnv("TOPIC_NAME", "default")
 	channel := "test"
 	conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
 	log.Printf("[NSQClient] Connect to %s", conn)
-	pub, _ := nsq.NewProducer(conn, nsq.NewConfig())
+
 	sub, _ := nsq.NewConsumer(topic, channel, nsq.NewConfig())
+	pub, _ := nsq.NewProducer(conn, nsq.NewConfig())
+
 
 	var handler benchmark.MessageHandler
 
@@ -30,16 +33,6 @@ func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
 		NumberOfMessages: numberOfMessages,
 		Latencies: []float32{},
 	}
-	/*
-	if testLatency {
-		handler = &benchmark.LatencyMessageHandler{
-			NumberOfMessages: numberOfMessages,
-			Latencies:        []float32{},
-		}
-	} else {
-		handler = &benchmark.ThroughputMessageHandler{NumberOfMessages: numberOfMessages}
-	}
-	*/
 
 	return &Nsq{
 		handler: handler,
@@ -47,17 +40,20 @@ func NewNsq(numberOfMessages int, testLatency bool) *Nsq {
 		sub:     sub,
 		topic:   topic,
 		channel: channel,
+		mode: clientMode,
 	}
 }
 
 func (n *Nsq) Setup() {
-	n.sub.AddHandler(nsq.HandlerFunc(func(message *nsq.Message) error {
-		n.handler.ReceiveMessage(message.Body)
-		return nil
-	}))
-	conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
-	log.Printf("[NSQClient] Subscribe to %s", conn)
-	n.sub.ConnectToNSQD(conn)
+	if n.mode == "consumer" {
+		n.sub.AddHandler(nsq.HandlerFunc(func(message *nsq.Message) error {
+			n.handler.ReceiveMessage(message.Body)
+			return nil
+		}))
+		conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
+		log.Printf("[NSQClient] Subscribe to %s", conn)
+		n.sub.ConnectToNSQD(conn)
+	}
 }
 
 func (n *Nsq) Teardown() {
