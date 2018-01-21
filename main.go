@@ -13,6 +13,8 @@ func newTester(subject string, testLatency bool, msgCount, msgSize int, mode str
 	var messageSender benchmark.MessageSender
 	var messageReceiver benchmark.MessageReceiver
 
+	log.Printf("Testing %s", subject)
+
 	switch subject {
 	case "nsq":
 		nsq := mq.NewNsq(msgCount, mode)
@@ -47,7 +49,7 @@ func getEnv(key, defaultValue string) string {
 
 func parseEnv() (string, bool, int, int, string) {
 	test := getEnv("TEST", "nsq")
-	messageCount, err := strconv.Atoi(getEnv("MESSAGE_COUNT", "10000"))
+	messageCount, err := strconv.Atoi(getEnv("MESSAGE_COUNT", "0"))
 	messageSize, err := strconv.Atoi(getEnv("MESSAGE_SIZE", "1024"))
 	mode := getEnv("CLIENT_MODE", "consumer") // consumer vs producer
 	testLatency, err := strconv.ParseBool(getEnv("TEST_LATENCY", "false"))

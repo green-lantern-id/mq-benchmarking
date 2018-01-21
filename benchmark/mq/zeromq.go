@@ -1,7 +1,6 @@
 package mq
 
 import (
-	"time"
 
 	"github.com/pebbe/zmq4"
 	"github.com/green-lantern-id/mq-benchmarking/benchmark"
@@ -50,7 +49,7 @@ func NewZeromq(numberOfMessages int, clientMode string) *Zeromq {
 
 func (zeromq *Zeromq) Setup() {
 	// Sleep is needed to avoid race condition with receiving initial messages.
-	time.Sleep(3 * time.Second)
+//	time.Sleep(30 * time.Second)
 	go zeromqReceive(zeromq)
 }
 

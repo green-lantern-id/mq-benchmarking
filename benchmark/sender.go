@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 	"time"
+	"fmt"
 )
 
 type MessageSender interface {
@@ -17,19 +18,24 @@ type SendEndpoint struct {
 func (endpoint SendEndpoint) Start(msgSize<-chan int, doneSignal<-chan bool){
 	done := false
 	log.Printf("Start sender")
+	i:=1
+	started := time.Now().UnixNano()
 	for done != true {
 		select {
 			case mSize:= <-msgSize:
-				log.Printf("Got clock")
 				message := make([]byte, mSize)
 				binary.PutVarint(message, time.Now().UnixNano())
 				endpoint.MessageSender.Send(message)
+				fmt.Printf("\rMessage Sent: %d", i)
+				i++
 			case signal:= <-doneSignal:
 				done = signal
+				fmt.Printf("\n")
 		}
 	}
-
-	log.Printf("its done")
+	ended := time.Now().UnixNano()
+	ms := float32(ended-started)/ 1000000
+	log.Printf("Elapse time: %f", ms)
 }
 
 

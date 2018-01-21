@@ -32,6 +32,7 @@ func (tester Tester) Test() {
 
 		msgSizeGenerator := getEnv("MSG_SIZE_GENERATOR", "uniform")	// uniform|poisson
 		msgRateGenerator := getEnv("MSG_RATE_GENERATOR", "uniform")	// uniform|poisson
+		testDuration,_ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
 
 		var msgGenerator generator.MessageGenerator
 
@@ -45,11 +46,11 @@ func (tester Tester) Test() {
 	//	var end chan bool
 		if msgRateGenerator == "uniform" {
 			uniformRate, _ := strconv.ParseFloat(getEnv("MSG_UNIFORM_TPS_RATE", "1000"), 64)
-			msgSizeChan, end := clock.UniformRate(msgGenerator, uniformRate, tester.MessageCount)
+			msgSizeChan, end := clock.UniformRate(msgGenerator, uniformRate, tester.MessageCount, testDuration)
 			sender.Start(msgSizeChan, end)
 		} else {	// poisson
 			poissonAvgRate, _ := strconv.ParseFloat(getEnv("MSG_POISSON_AVG_DELAY", "500"), 64)
-			msgSizeChan, end := clock.PoissonRate(msgGenerator, poissonAvgRate, tester.MessageCount)
+			msgSizeChan, end := clock.PoissonRate(msgGenerator, poissonAvgRate, tester.MessageCount, testDuration)
 			sender.Start(msgSizeChan, end)
 		}
 
