@@ -5,15 +5,22 @@ mq-benchmarking
 - Remove environment variable `LATENCY_TEST`. All test case will produce both latency and throughput results
 
 ### Environment Variables
-- TEST_NAME: "nsq"(default)|"zmq" (this version support only "nsq")
+- TEST: "nsq"(default)|"zmq"
 - CLIENT_MODE:    "consumer"(default), "producer"
 - MQ_CONNECTION_STRING: connection string to message queue endpoint
-- MESSAGE_COUNT: number of message for perform testing
-- MESSAGE_SIZE: size of message (byte)
+- MESSAGE_COUNT: number of message for perform testing (set to `0` when want to specify duration)
+- TEST_DURATION: string of int (milliseconds) for testing (set to `0` when want to specify message count)
+- MSG_SIZE_GENERATOR: `uniform`(default), `possion`
+- MSG_RATE_GENERATOR: `uniform`(default), `possion`
+- MSG_UNIFORM_SIZE: string of int(default 1024), message size (in byte), available only `MSG_SIZE_GENERATOR` is `uniform`
+- MSG_UNIFORM_TPS_RATE" string of float(default 1000.0), rate of sending message, available only when `MSG_RATE_GENERATOR` is `uniform`
+- MSG_POISSON_AVG_DELAY: string of float(default 500.0) Average delay (between sending message). Available only when `MSG_RATE_GENERATOR`=`poisson`
+
 
 ### TODO
-- add ZMQ
 - Configuration topic name (probably use topic name for each test case)
+- End signal (by time), currently available only number of messages
+- Mount volumn for test result
 
 
 ### Docker build

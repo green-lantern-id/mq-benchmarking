@@ -1,4 +1,4 @@
-package benchmark
+package distribution
 
 import (
   "time"

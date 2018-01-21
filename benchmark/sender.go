@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 	"time"
+	"fmt"
 )
 
 type MessageSender interface {
@@ -12,6 +13,29 @@ type MessageSender interface {
 
 type SendEndpoint struct {
 	MessageSender MessageSender
+}
+
+func (endpoint SendEndpoint) Start(msgSize<-chan int, doneSignal<-chan bool){
+	done := false
+	log.Printf("Start sender")
+	i:=1
+	started := time.Now().UnixNano()
+	for done != true {
+		select {
+			case mSize:= <-msgSize:
+				message := make([]byte, mSize)
+				binary.PutVarint(message, time.Now().UnixNano())
+				endpoint.MessageSender.Send(message)
+				fmt.Printf("\rMessage Sent: %d", i)
+				i++
+			case signal:= <-doneSignal:
+				done = signal
+				fmt.Printf("\n")
+		}
+	}
+	ended := time.Now().UnixNano()
+	ms := float32(ended-started)/ 1000000
+	log.Printf("Elapse time: %f", ms)
 }
 
 
@@ -50,6 +74,7 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 	for i := 0; i < numberToSend; i++ {
 		binary.PutVarint(b, time.Now().UnixNano())
 		endpoint.MessageSender.Send(b)
+		log.Printf("Message Sent")
 	}
 
 	stop := time.Now().UnixNano()
@@ -62,7 +87,7 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 /*
 var testDurationInSecond int64;
 
-func (endpoint SendEndpoint) sendFunction(messageSize int) {
+func sendFunction(messageSize int) {
   message := make([]byte, messageSize);
   binary.PutVarint(message, time.Now().UnixNano())
   endpoint.MessageSender.Send(message);
