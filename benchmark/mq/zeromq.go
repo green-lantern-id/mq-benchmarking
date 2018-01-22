@@ -1,7 +1,8 @@
 package mq
 
 import (
-
+	"strconv"
+	"time"
 	"github.com/pebbe/zmq4"
 	"github.com/green-lantern-id/mq-benchmarking/benchmark"
 )
@@ -35,8 +36,10 @@ func NewZeromq(numberOfMessages int, clientMode string) *Zeromq {
 
 	var handler benchmark.MessageHandler
 
+	duration, _ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
 	handler = &benchmark.AllInOneMessageHandler{
 		NumberOfMessages: numberOfMessages,
+		Timeout: duration,
 		Latencies: []float32{},
 	}
 
@@ -49,7 +52,7 @@ func NewZeromq(numberOfMessages int, clientMode string) *Zeromq {
 
 func (zeromq *Zeromq) Setup() {
 	// Sleep is needed to avoid race condition with receiving initial messages.
-//	time.Sleep(30 * time.Second)
+	time.Sleep(3 * time.Second)
 	go zeromqReceive(zeromq)
 }
 
