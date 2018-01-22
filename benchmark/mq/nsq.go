@@ -3,7 +3,7 @@ package mq
 import (
 	"log"
 	"os"
-
+	"strconv"
 	"github.com/bitly/go-nsq"
 	"github.com/green-lantern-id/mq-benchmarking/benchmark"
 )
@@ -21,6 +21,8 @@ func NewNsq(numberOfMessages int, clientMode string) *Nsq {
 	topic := getEnv("TOPIC_NAME", "default")
 	channel := "test"
 	conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
+	duration, _:= strconv.Atoi(getEnv("TEST_DURATION","0"))
+
 	log.Printf("[NSQClient] Connect to %s", conn)
 
 	sub, _ := nsq.NewConsumer(topic, channel, nsq.NewConfig())
@@ -31,6 +33,7 @@ func NewNsq(numberOfMessages int, clientMode string) *Nsq {
 
 	handler = &benchmark.AllInOneMessageHandler{
 		NumberOfMessages: numberOfMessages,
+		Timeout: duration,
 		Latencies: []float32{},
 	}
 
