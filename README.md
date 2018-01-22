@@ -35,6 +35,12 @@ mq-benchmarking
 #### Run Consumer
 `docker run -it --rm -e CLIENT_MODE='consumer' -e MQ_CONNECTION_STRING='somewhere:someport' green-lantern/mq-benchmarking:0.1`
 
+##### Get Latency report
+with mounted volume to /var/log
+example: `-v /var/log:/var/log`
+Report filename: mq_latency.csv
+
+
 #### Run Producer
 `docker run -it --rm -e CLIENT_MODE='producer' -e MQ_CONNECTION_STRING='somewhere:someport' green-lantern/mq-benchmarking:0.1`
 
