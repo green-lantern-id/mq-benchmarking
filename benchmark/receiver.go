@@ -127,7 +127,7 @@ func (handler *AllInOneMessageHandler) WriteReport(){
 	avgLatency := float32(sum) / float32(len(handler.Latencies))
 
 	// Write report.csv
-	file, err := os.Create("result.csv")
+	file, err := os.Create("/var/log/mq_latency.csv")
 	if err != nil {
 		log.Fatal("Cannot create file")
 	}
