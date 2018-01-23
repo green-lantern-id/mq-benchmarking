@@ -47,6 +47,8 @@ func (p PoissonSample) PMF(k int) float64{
   }
   if(lambda > float64(k)) {
     result /= math.Pow(math.E,lambda - float64(k));
+  } else {
+    result /= math.Pow(math.E,lambda - math.Floor(lambda))
   }
   return result;
   //simple code like following may reach "Infinity" between calculation 
