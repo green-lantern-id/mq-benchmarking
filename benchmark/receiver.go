@@ -74,12 +74,13 @@ func (handler *AllInOneMessageHandler) ReceiveMessage(message []byte) bool {
 
 	// Record latency
 	then, _ := binary.Varint(message[0:9])	// First 8 bytes is sending time
+	fin, _ := binary.Varint(message[9:18])	// FIN
+
 	if then != 0 {
 		handler.Latencies = append(handler.Latencies, (float32(now-then))/1000000.0)
-		fmt.Printf("\rLatency: %f",(float32(now-then))/1000000.0)
 	}
 
-	if handler.messageCounter == handler.NumberOfMessages && handler.Timeout != 0 {
+	if fin != 0 {
 		handler.stopped = time.Now().UnixNano()
 		handler.WriteReport()
 		handler.completionLock.Lock()

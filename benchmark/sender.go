@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 	"fmt"
+
+	"github.com/green-lantern-id/mq-benchmarking/benchmark/distribution"
 )
 
 type MessageSender interface {
@@ -13,6 +15,62 @@ type MessageSender interface {
 
 type SendEndpoint struct {
 	MessageSender MessageSender
+}
+
+func (endpoint SendEndpoint) sendMsg(msgSize int, fin int64){
+	message := make([]byte, msgSize)
+	binary.PutVarint(message, time.Now().UnixNano())
+	binary.PutVarint(message[9:], fin)
+	endpoint.MessageSender.Send(message)	
+}
+
+func (endpoint SendEndpoint) StartPoisson (numMsg int, duration int, delayUs int, msgSize int, poissonRate float64, isPoisson bool) {
+
+	// Sample wait time.
+	poisson := distribution.GeneratePoisson(poissonRate)
+	started:= time.Now().UnixNano()
+	delay := delayUs
+	if numMsg != 0 { // number of messages mode
+		for i:=0; i<numMsg; i++ {
+			endpoint.sendMsg(msgSize, 0)
+			fmt.Printf("\rMessage sent: %d", i)
+			if isPoisson {
+				delay = poisson.Sample()
+			}
+			<-time.After(time.Microsecond * time.Duration(delay))
+		}
+		// Sent FIN message
+		endpoint.sendMsg(msgSize, 0xff)
+		fmt.Printf("\nSent FIN\n")
+
+	} else {	// assume that duration is not zero
+		done := false
+
+		// Set timer
+		go func(){
+			ticker := time.NewTicker(time.Millisecond * time.Duration(duration)).C 
+			for {
+				<-ticker
+				done = true
+			}
+		}()
+
+		i:=1
+		for !done {
+			endpoint.sendMsg(msgSize, 0)
+			fmt.Printf("\rMessage sent: %d", i)
+			i++
+			if isPoisson {
+				delay = poisson.Sample()
+			}
+			<-time.After(time.Microsecond * time.Duration(delay))
+		}
+		endpoint.sendMsg(msgSize, 0xff)	// Send FIN message
+		fmt.Printf("\nSend FIN\n")
+	}
+
+	ms := float32(time.Now().UnixNano() - started)/1000000
+	log.Printf("Time: %f ms", ms)
 }
 
 func (endpoint SendEndpoint) Start(msgSize<-chan int, doneSignal<-chan bool){
@@ -82,40 +140,3 @@ func (endpoint SendEndpoint) TestLatency(messageSize int, numberToSend int) {
 	log.Printf("Sent %d messages in %f ms\n", numberToSend, ms)
 	log.Printf("Sent %f per second\n", 1000*float32(numberToSend)/ms)
 }
-
-//========================== Poisson ==============================================
-/*
-var testDurationInSecond int64;
-
-func sendFunction(messageSize int) {
-  message := make([]byte, messageSize);
-  binary.PutVarint(message, time.Now().UnixNano())
-  endpoint.MessageSender.Send(message);
-}
-
-func stopCondition(start int64, result PoissonResult) bool {
-  now := time.Now().UnixNano();
-  diffInSecond := (now - start) / 1000000000;
-  return diffInSecond >= testDurationInSecond
-  //or limit message count
-}
-
-//====== call =========
-
-func (endpoint SendEndpoint) Poisson(avgMessageSizeInKB float64,
-  avgDelayBetweenMessageInMicrosecond float64,
-  _testDurationInSecond int64) {
- 
-  testDurationInSecond = _testDurationInSecond;
-
-  result := poissonBenchmark(avgMessageSizeInKB,
-    avgDelayBetweenMessageInMicrosecond, 
-    sendFunction,
-    stopCondition );
-
-  log.Printf("Sent %d messages with sum size %d KB time used %f ms\n",result.messageCount,
-    result.sumDataSize,
-    float64(result.timeUsed)/float64(1000000));
-
-}
-*/
