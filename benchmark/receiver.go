@@ -2,12 +2,12 @@ package benchmark
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
-	"strings"
-	"fmt"
-	"os"
 )
 
 type MessageReceiver interface {
@@ -38,19 +38,18 @@ type MessageHandler interface {
 	// Indicate whether the handler has been marked complete, meaning all messages
 	// have been received.
 	HasCompleted() bool
-
 }
 
 type AllInOneMessageHandler struct {
 	NumberOfMessages int
-	Timeout int
-	Latencies []float32
-	messageCounter int
-	hasStarted bool
-	hasCompleted bool
-	started int64
-	stopped int64
-	completionLock sync.Mutex
+	Timeout          int
+	Latencies        []float32
+	messageCounter   int
+	hasStarted       bool
+	hasCompleted     bool
+	started          int64
+	stopped          int64
+	completionLock   sync.Mutex
 }
 
 func (handler *AllInOneMessageHandler) HasCompleted() bool {
@@ -62,7 +61,7 @@ func (handler *AllInOneMessageHandler) HasCompleted() bool {
 // Merge Latency and Throughput to a single handler + write report to file
 func (handler *AllInOneMessageHandler) ReceiveMessage(message []byte) bool {
 	now := time.Now().UnixNano()
-	if !handler.hasStarted{
+	if !handler.hasStarted {
 		handler.hasStarted = true
 		handler.started = time.Now().UnixNano()
 		if handler.Timeout != 0 {
@@ -73,8 +72,8 @@ func (handler *AllInOneMessageHandler) ReceiveMessage(message []byte) bool {
 	handler.messageCounter++
 
 	// Record latency
-	then, _ := binary.Varint(message[0:9])	// First 8 bytes is sending time
-	fin, _ := binary.Varint(message[9:18])	// FIN
+	then, _ := binary.Varint(message[0:9]) // First 8 bytes is sending time
+	fin, _ := binary.Varint(message[9:18]) // FIN
 
 	if then != 0 {
 		handler.Latencies = append(handler.Latencies, (float32(now-then))/1000000.0)
@@ -104,7 +103,7 @@ func (endpoint ReceiveEndpoint) WaitForCompletion() {
 // Set timer to stop (milliseconds)
 func (handler *AllInOneMessageHandler) SetTimer() {
 	log.Printf("Set consumer timeout: %d ms", handler.Timeout)
-	go func(){
+	go func() {
 		<-time.After(time.Duration(handler.Timeout) * time.Millisecond)
 		handler.stopped = time.Now().UnixNano()
 		handler.WriteReport()
@@ -114,12 +113,11 @@ func (handler *AllInOneMessageHandler) SetTimer() {
 	}()
 }
 
-func (handler *AllInOneMessageHandler) WriteReport(){
-	ms := float32(handler.stopped-handler.started)/1000000.0
+func (handler *AllInOneMessageHandler) WriteReport() {
+	ms := float32(handler.stopped-handler.started) / 1000000.0
 	fmt.Printf("\n\n")
 	log.Printf("Received %d messages in %f ms\n", handler.messageCounter, ms)
 	log.Printf("Throughput %f msg per second\n", float32(handler.messageCounter*1000)/ms)
-
 
 	sum := float32(0)
 	for _, latency := range handler.Latencies {
