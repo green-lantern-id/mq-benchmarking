@@ -57,58 +57,32 @@ func (endpoint SendEndpoint) StartPoisson(numMsg int, duration int, delayUs int,
 		}()
 
 		i := 0
-		/*
-			xmsgSentChan := make(chan int)
+		xmsgSentChan := make(chan int)
 
-			go func() {
-				for {
-					endpoint.sendMsg(msgSize, 0)
-					xmsgSentChan <- 1
-					if isPoisson {
-						delay = poisson.Sample()
-					}
-					<-time.After(time.Microsecond * time.Duration(delay))
+		go func() {
+			for {
+				endpoint.sendMsg(msgSize, 0)
+				xmsgSentChan <- 1
+				if isPoisson {
+					delay = poisson.Sample()
 				}
-			}()
-
-			for !done {
-				<-xmsgSentChan
-				i++
+				<-time.After(time.Microsecond * time.Duration(delay))
 			}
-		*/
-
-		// Move nornal sending to main flow and send FIN in anoter go routine
+		}()
 
 		for !done {
-			endpoint.sendMsg(msgSize, 0)
-			i++ // update mesage counter
-			if isPoisson {
-				delay = poisson.Sample()
-			}
-			<-time.After(time.Millisecond * time.Duration(delay))
+			<-xmsgSentChan
+			i++
 		}
 
 		// Sent FIN
 		ended = time.Now().UnixNano()
 
-		/*
-			for j := 0; j < 1000; j++ {
-				endpoint.sendMsg(1024, 0xff)
-				<-time.After(time.Millisecond)
-			}
-			fmt.Printf("\nSend FIN (every 1ms for 1 sec)\n")
-		*/
-
-		//
-		// Sending FIN
-		go func() {
-			for {
-				endpoint.sendMsg(1024, 0xff)
-				<-time.After(time.Microsecond)
-			}
-		}()
-
-		<-time.After(time.Second * time.Duration(10))
+		for j := 0; j < 1000; j++ {
+			endpoint.sendMsg(1024, 0xff)
+			<-time.After(time.Millisecond)
+		}
+		fmt.Printf("\nSend FIN (every 1ms for 1 sec)\n")
 
 		log.Printf("Message sent: %d", i)
 	}
