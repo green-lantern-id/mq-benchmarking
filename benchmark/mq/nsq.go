@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+
 	"github.com/bitly/go-nsq"
 	"github.com/green-lantern-id/mq-benchmarking/benchmark"
 )
@@ -14,27 +15,26 @@ type Nsq struct {
 	sub     *nsq.Consumer
 	topic   string
 	channel string
-	mode string
+	mode    string
 }
 
 func NewNsq(numberOfMessages int, clientMode string) *Nsq {
 	topic := getEnv("TOPIC_NAME", "default")
 	channel := "test"
 	conn := getEnv("MQ_CONNECTION_STRING", "localhost:4150")
-	duration, _:= strconv.Atoi(getEnv("TEST_DURATION","0"))
+	duration, _ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
 
 	log.Printf("[NSQClient] Connect to %s", conn)
 
 	sub, _ := nsq.NewConsumer(topic, channel, nsq.NewConfig())
 	pub, _ := nsq.NewProducer(conn, nsq.NewConfig())
 
-
 	var handler benchmark.MessageHandler
 
 	handler = &benchmark.AllInOneMessageHandler{
 		NumberOfMessages: numberOfMessages,
-		Timeout: duration,
-		Latencies: []float32{},
+		Timeout:          duration,
+		Latencies:        []float32{},
 	}
 
 	return &Nsq{
@@ -43,7 +43,7 @@ func NewNsq(numberOfMessages int, clientMode string) *Nsq {
 		sub:     sub,
 		topic:   topic,
 		channel: channel,
-		mode: clientMode,
+		mode:    clientMode,
 	}
 }
 
@@ -65,8 +65,8 @@ func (n *Nsq) Teardown() {
 }
 
 func (n *Nsq) Send(message []byte) {
-	//n.pub.PublishAsync(n.topic, message, nil)
-	n.pub.Publish(n.topic, message)
+	n.pub.PublishAsync(n.topic, message, nil)
+	//n.pub.Publish(n.topic, message)
 }
 
 func (n *Nsq) MessageHandler() *benchmark.MessageHandler {

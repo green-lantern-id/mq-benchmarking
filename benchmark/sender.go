@@ -24,6 +24,56 @@ func (endpoint SendEndpoint) sendMsg(msgSize int, fin int64) {
 	endpoint.MessageSender.Send(message)
 }
 
+func (endpoint SendEndpoint) StartDuration(numMsg int, duration int, delayUs int, msgSize int, poissonRate float64, isPoisson bool) {
+	started := time.Now().UnixNano()
+	poisson := distribution.GeneratePoisson(poissonRate)
+	msgSizeChan := make(chan int)
+	done := make(chan bool)
+	delay := delayUs
+	doneSign := false
+
+	//Start sampling
+	go func() {
+		for !doneSign {
+			if isPoisson {
+				delay = poisson.Sample()
+			}
+			<-time.After(time.Microsecond * time.Duration(delay))
+			msgSizeChan <- msgSize
+		}
+	}()
+
+	// Start ending clock
+	go func() {
+		<-time.After(time.Millisecond * time.Duration(duration))
+		done <- true
+	}()
+
+	// Sending message
+	msgCount := 0
+	for !doneSign {
+		select {
+		case msgSize := <-msgSizeChan:
+			go endpoint.sendMsg(msgSize, 0)
+			msgCount++
+		case d := <-done:
+			doneSign = d
+		}
+	}
+
+	// Send fin
+	ended := time.Now().UnixNano()
+	log.Printf("Sending FIN messages")
+	for i := 0; i < 1000; i++ {
+		endpoint.sendMsg(1024, 0xff)
+		<-time.After(time.Millisecond)
+	}
+
+	ms := float32(ended-started) / 1000000
+	log.Printf("Time: %f ms", ms)
+	log.Printf("Message sent: %d", msgCount)
+}
+
 func (endpoint SendEndpoint) StartPoisson(numMsg int, duration int, delayUs int, msgSize int, poissonRate float64, isPoisson bool) {
 
 	// Sample wait time.
@@ -91,7 +141,7 @@ func (endpoint SendEndpoint) StartPoisson(numMsg int, duration int, delayUs int,
 	log.Printf("Time: %f ms", ms)
 }
 
-func (endpoint SendEndpoint) Start(msgSize <-chan int, doneSignal <-chan bool) {
+func (endpoint SendEndpoint) SendMsg(msgSize <-chan int, doneSignal <-chan bool) {
 	done := false
 	log.Printf("Start sender")
 	i := 1
@@ -110,6 +160,13 @@ func (endpoint SendEndpoint) Start(msgSize <-chan int, doneSignal <-chan bool) {
 		}
 	}
 	ended := time.Now().UnixNano()
+
+	for j := 0; j < 1000; j++ {
+		endpoint.sendMsg(1024, 0xff)
+		<-time.After(time.Millisecond)
+	}
+	fmt.Printf("\nSend FIN (every 1ms for 1 sec)\n")
+	log.Printf("Message sent: %d", i)
 	ms := float32(ended-started) / 1000000
 	log.Printf("Elapse time: %f", ms)
 }

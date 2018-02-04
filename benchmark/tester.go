@@ -2,8 +2,8 @@ package benchmark
 
 import (
 	"log"
-	"strconv"
 	"os"
+	"strconv"
 )
 
 type Tester struct {
@@ -18,18 +18,18 @@ type Tester struct {
 
 func (tester Tester) Test() {
 	log.Printf("Begin %s test", tester.Name)
-	if tester.Mode == "consumer"{
+	if tester.Mode == "consumer" {
 		tester.Setup()
 	}
 	defer tester.Teardown()
-	testDuration,_ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
+	testDuration, _ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
 	msgSize, _ := strconv.Atoi(getEnv("MSG_UNIFORM_SIZE", "1024"))
 
-	if tester.Mode == "producer"{
+	if tester.Mode == "producer" {
 		log.Printf("Running producer mode")
 		sender := &SendEndpoint{MessageSender: tester}
 
-		msgRateGenerator := getEnv("MSG_RATE_GENERATOR", "uniform")	// uniform|poisson
+		msgRateGenerator := getEnv("MSG_RATE_GENERATOR", "uniform") // uniform|poisson
 
 		if msgRateGenerator == "uniform" {
 			uniformRate, _ := strconv.Atoi(getEnv("MSG_UNIFORM_DELAY_US", "1000"))
@@ -38,15 +38,15 @@ func (tester Tester) Test() {
 			log.Printf("Delay Time: %d micro-seconds", uniformRate)
 			log.Printf("Message Size: %d bytes", msgSize)
 			log.Printf("================================")
-			sender.StartPoisson(tester.MessageCount, testDuration, uniformRate, msgSize, 0, false)
-		} else {	// poisson
+			sender.StartDuration(tester.MessageCount, testDuration, uniformRate, msgSize, 0, false)
+		} else { // poisson
 			poissonAvgRate, _ := strconv.ParseFloat(getEnv("MSG_POISSON_AVG_DELAY", "500.0"), 64)
 			log.Printf("======= Test configuation ======")
 			log.Printf("Distribution: Poisson")
 			log.Printf("Average Rate: %f micro-seconds", poissonAvgRate)
 			log.Printf("Message Size: %d bytes", msgSize)
 			log.Printf("================================")
-			sender.StartPoisson(tester.MessageCount, testDuration, 0, msgSize, poissonAvgRate, true)
+			sender.StartDuration(tester.MessageCount, testDuration, 0, msgSize, poissonAvgRate, true)
 		}
 	} else {
 		log.Printf("Running consumer mode")
