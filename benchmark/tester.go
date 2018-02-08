@@ -24,6 +24,7 @@ func (tester Tester) Test() {
 	defer tester.Teardown()
 	testDuration, _ := strconv.Atoi(getEnv("TEST_DURATION", "0"))
 	msgSize, _ := strconv.Atoi(getEnv("MSG_UNIFORM_SIZE", "1024"))
+	fin, _ := strconv.ParseBool(getEnv("FIN_ENABLED", "false"))
 
 	if tester.Mode == "producer" {
 		log.Printf("Running producer mode")
@@ -38,7 +39,7 @@ func (tester Tester) Test() {
 			log.Printf("Delay Time: %d micro-seconds", uniformRate)
 			log.Printf("Message Size: %d bytes", msgSize)
 			log.Printf("================================")
-			sender.StartDuration(tester.MessageCount, testDuration, uniformRate, msgSize, 0, false)
+			sender.StartDuration(tester.MessageCount, testDuration, uniformRate, msgSize, 0, false, fin)
 		} else { // poisson
 			poissonAvgRate, _ := strconv.ParseFloat(getEnv("MSG_POISSON_AVG_DELAY", "500.0"), 64)
 			log.Printf("======= Test configuation ======")
@@ -46,7 +47,7 @@ func (tester Tester) Test() {
 			log.Printf("Average Rate: %f micro-seconds", poissonAvgRate)
 			log.Printf("Message Size: %d bytes", msgSize)
 			log.Printf("================================")
-			sender.StartDuration(tester.MessageCount, testDuration, 0, msgSize, poissonAvgRate, true)
+			sender.StartDuration(tester.MessageCount, testDuration, 0, msgSize, poissonAvgRate, true, fin)
 		}
 	} else {
 		log.Printf("Running consumer mode")

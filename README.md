@@ -14,8 +14,10 @@ mq-benchmarking
 - MSG_SIZE_GENERATOR: `uniform`(default), `poisson`
 - MSG_RATE_GENERATOR: `uniform`(default), `poisson`
 - MSG_UNIFORM_SIZE: string of int(default 1024), message size (in byte), available only `MSG_SIZE_GENERATOR` is `uniform`
-- MSG_UNIFORM_TPS_RATE" string of float(default 1000.0), rate of sending message, available only when `MSG_RATE_GENERATOR` is `uniform`
+- (Deprecated)MSG_UNIFORM_TPS_RATE" string of float(default 1000.0), rate of sending message, available only when `MSG_RATE_GENERATOR` is `uniform`
+- MSG_UNIFORM_DELAY_US: delay between each message (microsecond) default is 1000 microseconds
 - MSG_POISSON_AVG_DELAY: string of float(default 500.0) Average delay (between sending message). Available only when `MSG_RATE_GENERATOR`=`poisson`
+- FIN_ENABLED: enabled sender to send FIN message 0xFF 1000 messages (1 millisecond delay between), default is `false`, means not sending FIN at all
 
 
 ### TODO

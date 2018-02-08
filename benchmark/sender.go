@@ -24,7 +24,7 @@ func (endpoint SendEndpoint) sendMsg(msgSize int, fin int64) {
 	endpoint.MessageSender.Send(message)
 }
 
-func (endpoint SendEndpoint) StartDuration(numMsg int, duration int, delayUs int, msgSize int, poissonRate float64, isPoisson bool) {
+func (endpoint SendEndpoint) StartDuration(numMsg int, duration int, delayUs int, msgSize int, poissonRate float64, isPoisson bool, finEnabled bool) {
 	started := time.Now().UnixNano()
 	poisson := distribution.GeneratePoisson(poissonRate)
 	msgSizeChan := make(chan int)
@@ -63,10 +63,12 @@ func (endpoint SendEndpoint) StartDuration(numMsg int, duration int, delayUs int
 
 	// Send fin
 	ended := time.Now().UnixNano()
-	log.Printf("Sending FIN messages")
-	for i := 0; i < 1000; i++ {
-		endpoint.sendMsg(1024, 0xff)
-		<-time.After(time.Millisecond)
+	if finEnabled {
+		log.Printf("Sending FIN messages")
+		for i := 0; i < 1000; i++ {
+			endpoint.sendMsg(1024, 0xff)
+			<-time.After(time.Millisecond)
+		}
 	}
 
 	ms := float32(ended-started) / 1000000
